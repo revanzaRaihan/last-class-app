@@ -229,6 +229,28 @@ export default function MomentsSection() {
   const mouseY = useMotionValue(0)
   const [unlockedCount, setUnlockedCount] = useState(1)
   const [selectedItem, setSelectedItem] = useState(null)
+  
+  // State untuk deteksi mobile
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Effect untuk cek ukuran layar
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    // Cek saat mount
+    checkMobile()
+    
+    // Listen saat resize
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Filter fragments berdasarkan state mobile
+  const visibleFragments = useMemo(() => {
+    return isMobile ? cyberFragments.slice(0, 4) : cyberFragments
+  }, [isMobile])
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -267,7 +289,8 @@ export default function MomentsSection() {
       <div className="absolute inset-0 z-0 bg-blue-900 mix-blend-overlay opacity-[0.08]"></div>
 
       <div className="absolute inset-0 z-0 w-full h-full overflow-hidden">
-        {cyberFragments.map((item, index) => (
+        {/* Render visibleFragments instead of cyberFragments */}
+        {visibleFragments.map((item, index) => (
           <CyberCard
             key={item.id}
             item={item}
@@ -313,8 +336,8 @@ export default function MomentsSection() {
               <p>{'>'} Initializing memory scan...</p>
               <p className="font-bold text-blue-700">
                 {'>'} Images loaded:{' '}
-                <span className={unlockedCount <= cyberFragments.length ? 'animate-pulse' : ''}>
-                  {Math.min(unlockedCount, cyberFragments.length)}/{cyberFragments.length}
+                <span className={unlockedCount <= visibleFragments.length ? 'animate-pulse' : ''}>
+                  {Math.min(unlockedCount, visibleFragments.length)}/{visibleFragments.length}
                 </span>
               </p>
               <p className="text-gray-400 text-[10px] mt-1">{'>'} Klik kartu untuk membuka file_</p>
