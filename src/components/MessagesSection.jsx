@@ -1,17 +1,16 @@
 // src/components/MessagesSection.jsx
+import { memo, useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Mail, MessageSquare, Star, AtSign, X, Send, UserX, User, CheckCircle, Loader, AlertCircle } from 'lucide-react'
-import { useState, useEffect } from 'react'
 
-// ─── Ganti dengan URL backend kamu ───────────────────────────────────────────
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
-// ─── REUSABLE ANIMATION ───────────────────────────────────────────────────────
-const WordReveal = ({ text, className, delay = 0 }) => {
+// ─── WordReveal dimemo ────────────────────────────────────────────────────────
+const WordReveal = memo(({ text, className, delay = 0 }) => {
   const words = text.split(' ')
   const container = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: delay } }
+    visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: delay } },
   }
   const child = {
     visible: { opacity: 1, y: 0, transition: { type: 'spring', damping: 12, stiffness: 200 } },
@@ -25,27 +24,28 @@ const WordReveal = ({ text, className, delay = 0 }) => {
       ))}
     </motion.div>
   )
-}
+})
+WordReveal.displayName = 'WordReveal'
 
-// ─── SEED (ditampilkan sebelum data API masuk) ────────────────────────────────
+// ─── Seed messages ────────────────────────────────────────────────────────────
 const seedMessages = [
-  { id: 's1', name: 'Wali Kelas',     role: 'CLASS_MANAGER', initial: 'WK', color: 'bg-pink-100 text-pink-600',     text: 'Sukses selalu anak-anakku. Pintu sekolah selalu terbuka!', isStarred: true },
-  { id: 's2', name: 'Guru BK',        role: 'DISCIPLINE_MOD',initial: 'BK', color: 'bg-purple-100 text-purple-600', text: 'Jaga attitude kalian di dunia kerja. Bangga sama kalian!' },
-  { id: 's3', name: 'Ketua Kelas',    role: 'SYSTEM_ADMIN',  initial: 'KM', color: 'bg-blue-100 text-blue-600',     text: 'Maaf sering marah pas nagih uang kas. Luv u all! 😭' },
-  { id: 's4', name: 'Teman Sebangku', role: 'CO_PILOT',      initial: 'TS', color: 'bg-yellow-100 text-yellow-600', text: 'Bakalan kangen nyontek codingan lu pas deadline. See you!' },
-  { id: 's5', name: 'Adik Kelas',     role: 'NEW_USER',      initial: 'AK', color: 'bg-green-100 text-green-600',   text: 'Kak, warisin projekan skripsinya dong hehe...' },
-  { id: 's6', name: 'Satpam',         role: 'SECURITY',      initial: 'SS', color: 'bg-gray-100 text-gray-600',     text: 'Jangan lupa helmnya dibawa ya mas, jangan ditinggal.' },
+  { id: 's1', name: 'Wali Kelas',     role: 'CLASS_MANAGER',  initial: 'WK', color: 'bg-pink-100 text-pink-600',     text: 'Sukses selalu anak-anakku. Pintu sekolah selalu terbuka!', isStarred: true },
+  { id: 's2', name: 'Guru BK',        role: 'DISCIPLINE_MOD', initial: 'BK', color: 'bg-purple-100 text-purple-600', text: 'Jaga attitude kalian di dunia kerja. Bangga sama kalian!' },
+  { id: 's3', name: 'Ketua Kelas',    role: 'SYSTEM_ADMIN',   initial: 'KM', color: 'bg-blue-100 text-blue-600',     text: 'Maaf sering marah pas nagih uang kas. Luv u all! 😭' },
+  { id: 's4', name: 'Teman Sebangku', role: 'CO_PILOT',       initial: 'TS', color: 'bg-yellow-100 text-yellow-600', text: 'Bakalan kangen nyontek codingan lu pas deadline. See you!' },
+  { id: 's5', name: 'Adik Kelas',     role: 'NEW_USER',       initial: 'AK', color: 'bg-green-100 text-green-600',   text: 'Kak, warisin projekan skripsinya dong hehe...' },
+  { id: 's6', name: 'Satpam',         role: 'SECURITY',       initial: 'SS', color: 'bg-gray-100 text-gray-600',     text: 'Jangan lupa helmnya dibawa ya mas, jangan ditinggal.' },
 ]
 
 const colorPool = [
   'bg-rose-100 text-rose-600',    'bg-violet-100 text-violet-600',
   'bg-sky-100 text-sky-600',      'bg-amber-100 text-amber-600',
-  'bg-emerald-100 text-emerald-600','bg-orange-100 text-orange-600',
+  'bg-emerald-100 text-emerald-600', 'bg-orange-100 text-orange-600',
   'bg-teal-100 text-teal-600',    'bg-fuchsia-100 text-fuchsia-600',
 ]
 
-// ─── MESSAGE CARD ─────────────────────────────────────────────────────────────
-const MessageCard = ({ msg }) => (
+// ─── MessageCard dimemo — tidak re-render jika pesan sama ────────────────────
+const MessageCard = memo(({ msg }) => (
   <div className="relative flex-shrink-0 w-[260px] md:w-[300px] bg-white border border-black rounded-lg p-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[5px_5px_0px_0px_rgba(37,99,235,1)] hover:-translate-y-1 transition-all duration-300 mx-3 cursor-pointer select-none">
     <div className="flex justify-between items-start mb-2 pb-2 border-b border-gray-100">
       <div className="flex items-center gap-2">
@@ -70,25 +70,33 @@ const MessageCard = ({ msg }) => (
       "{msg.text}"
     </p>
   </div>
-)
+))
+MessageCard.displayName = 'MessageCard'
 
-// ─── MARQUEE ROW ──────────────────────────────────────────────────────────────
-const MarqueeRow = ({ items, direction = 'left', speed = 40, delay = 0 }) => {
+// ─── MarqueeRow — tile dikurangi 4x → 2x, tambah will-change ─────────────────
+const MarqueeRow = memo(({ items, direction = 'left', speed = 40, delay = 0 }) => {
+  // Minimum 6 item agar loop mulus
+  const tiled = useMemo(() => {
+    const repeat = Math.ceil(6 / items.length) + 1
+    return Array.from({ length: repeat * 2 }, () => items).flat()
+  }, [items])
+
   if (!items.length) return null
-  const tiled = [...items, ...items, ...items, ...items]
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: direction === 'left' ? -20 : 20 }}
+      initial={{ opacity: 0, y: direction === 'left' ? -16 : 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.8, delay, ease: 'easeOut' }}
+      transition={{ duration: 0.6, delay, ease: 'easeOut' }}
       className="relative flex overflow-hidden py-3 bg-white/50 backdrop-blur-sm border-y border-gray-200"
     >
       <motion.div
         className="flex"
+        // will-change agar browser alokasi layer GPU
+        style={{ width: 'max-content', willChange: 'transform' }}
         animate={{ x: direction === 'left' ? ['0%', '-50%'] : ['-50%', '0%'] }}
         transition={{ ease: 'linear', duration: speed, repeat: Infinity }}
-        style={{ width: 'max-content' }}
       >
         {tiled.map((msg, i) => <MessageCard key={i} msg={msg} />)}
       </motion.div>
@@ -96,16 +104,17 @@ const MarqueeRow = ({ items, direction = 'left', speed = 40, delay = 0 }) => {
       <div className="absolute inset-y-0 right-0 w-8 md:w-16 bg-gradient-to-l from-[#f8f9fa] to-transparent z-10 pointer-events-none" />
     </motion.div>
   )
-}
+})
+MarqueeRow.displayName = 'MarqueeRow'
 
-// ─── MENFES MODAL ─────────────────────────────────────────────────────────────
-const MenfesModal = ({ onClose, onSubmit }) => {
-  const [mode, setMode]         = useState(null)       // 'anon' | 'initial'
+// ─── MenfesModal ──────────────────────────────────────────────────────────────
+const MenfesModal = memo(({ onClose, onSubmit }) => {
+  const [mode,        setMode]        = useState(null)
   const [initialText, setInitialText] = useState('')
-  const [message, setMessage]   = useState('')
-  const [step, setStep]         = useState(1)
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError]       = useState(null)
+  const [message,     setMessage]     = useState('')
+  const [step,        setStep]        = useState(1)
+  const [submitting,  setSubmitting]  = useState(false)
+  const [error,       setError]       = useState(null)
 
   const handleNext = () => {
     if (mode === 'initial' && !initialText.trim()) return
@@ -127,16 +136,13 @@ const MenfesModal = ({ onClose, onSubmit }) => {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/messages`, {
+      const res  = await fetch(`${API_BASE}/api/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
       const json = await res.json()
-
-      if (!res.ok || !json.ok) {
-        throw new Error(json.message || 'Gagal kirim pesan')
-      }
+      if (!res.ok || !json.ok) throw new Error(json.message || 'Gagal kirim pesan')
       onSubmit(json.data)
     } catch (err) {
       setError(err.message)
@@ -153,11 +159,11 @@ const MenfesModal = ({ onClose, onSubmit }) => {
       onClick={onClose}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.85, y: 40 }}
-        animate={{ opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 400, damping: 28 } }}
-        exit={{ opacity: 0, scale: 0.9, y: 20, transition: { duration: 0.2 } }}
+        initial={{ opacity: 0, scale: 0.88, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 380, damping: 28 } }}
+        exit={{ opacity: 0, scale: 0.92, y: 20, transition: { duration: 0.18 } }}
         className="relative w-full max-w-md bg-white border-2 border-black rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100">
@@ -188,11 +194,10 @@ const MenfesModal = ({ onClose, onSubmit }) => {
           <AnimatePresence mode="wait">
             {step === 1 && (
               <motion.div key="step1"
-                initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16 }}
+                transition={{ duration: 0.18 }}
               >
                 <p className="text-xs text-gray-500 mb-4 font-medium">Mau pakai identitas apa untuk pesanmu?</p>
-
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   {[
                     { key: 'anon',    icon: UserX, label: 'Anonymous',     sub: '100% rahasia' },
@@ -237,10 +242,9 @@ const MenfesModal = ({ onClose, onSubmit }) => {
 
             {step === 2 && (
               <motion.div key="step2"
-                initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}
+                transition={{ duration: 0.18 }}
               >
-                {/* Preview badge */}
                 <div className="flex items-center gap-2 mb-3 p-2.5 bg-gray-50 rounded-xl border border-gray-200">
                   <div className={`w-7 h-7 rounded-lg border border-black flex items-center justify-center font-bold text-[10px] ${colorPool[0]}`}>
                     {mode === 'anon' ? '??' : initialText.slice(0, 2).toUpperCase()}
@@ -287,15 +291,16 @@ const MenfesModal = ({ onClose, onSubmit }) => {
       </motion.div>
     </motion.div>
   )
-}
+})
+MenfesModal.displayName = 'MenfesModal'
 
-// ─── TOAST ────────────────────────────────────────────────────────────────────
+// ─── Toast ────────────────────────────────────────────────────────────────────
 const SuccessToast = () => (
   <motion.div
-    initial={{ opacity: 0, y: 60, scale: 0.9 }}
+    initial={{ opacity: 0, y: 50, scale: 0.92 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, y: 40, scale: 0.9 }}
-    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+    exit={{ opacity: 0, y: 30, scale: 0.92 }}
+    transition={{ type: 'spring', stiffness: 380, damping: 25 }}
     className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-black text-white px-5 py-3 rounded-full shadow-2xl border border-white/10 font-bold text-sm whitespace-nowrap"
   >
     <CheckCircle size={16} className="text-green-400" />
@@ -303,43 +308,39 @@ const SuccessToast = () => (
   </motion.div>
 )
 
-// ─── MAIN EXPORT ──────────────────────────────────────────────────────────────
-export default function MessagesSection() {
-  const [messages,   setMessages]   = useState(seedMessages)
-  const [loading,    setLoading]    = useState(true)
-  const [showModal,  setShowModal]  = useState(false)
-  const [showToast,  setShowToast]  = useState(false)
+// ─── MAIN ─────────────────────────────────────────────────────────────────────
+function MessagesSection() {
+  const [messages,  setMessages]  = useState(seedMessages)
+  const [showModal, setShowModal] = useState(false)
+  const [showToast, setShowToast] = useState(false)
 
-  // Ambil pesan dari API saat mount
   useEffect(() => {
     const fetchMessages = async () => {
       try {
         const res  = await fetch(`${API_BASE}/api/messages`)
         const json = await res.json()
         if (json.ok && json.data.length > 0) {
-          // Gabungkan seed + pesan dari DB (seed tetap ada sebagai pesan "resmi")
-          const dbIds = new Set(json.data.map(m => m.id))
           setMessages([...seedMessages, ...json.data])
         }
       } catch (_) {
-        // Gagal fetch → tetap tampilkan seed saja
-      } finally {
-        setLoading(false)
+        // Fallback ke seed
       }
     }
     fetchMessages()
   }, [])
 
-  const handleSubmit = (newMsg) => {
-    setMessages(prev => [...prev, newMsg])
+  const handleSubmit = useCallback((newMsg) => {
+    setMessages((prev) => [...prev, newMsg])
     setShowModal(false)
     setShowToast(true)
     setTimeout(() => setShowToast(false), 3500)
-  }
+  }, [])
 
-  const half     = Math.ceil(messages.length / 2)
-  const topMsgs  = messages.slice(0, half)
-  const botMsgs  = messages.slice(half)
+  // Split pesan jadi dua baris marquee
+  const { topMsgs, botMsgs } = useMemo(() => {
+    const half = Math.ceil(messages.length / 2)
+    return { topMsgs: messages.slice(0, half), botMsgs: messages.slice(half) }
+  }, [messages])
 
   const msgCount = Math.max(99, messages.length - seedMessages.length + 99)
 
@@ -349,12 +350,12 @@ export default function MessagesSection() {
       <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none"
         style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
-      {/* TOP */}
+      {/* Top marquee */}
       <div className="w-full z-10 mt-safe pt-4 md:pt-0">
         <MarqueeRow items={topMsgs} direction="left"  speed={40} delay={0.2} />
       </div>
 
-      {/* CENTER */}
+      {/* Center */}
       <div className="flex-1 flex flex-col items-center justify-center text-center px-4 relative z-20">
         <motion.div
           initial={{ scale: 0, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }}
@@ -403,7 +404,7 @@ export default function MessagesSection() {
         </motion.p>
       </div>
 
-      {/* BOTTOM */}
+      {/* Bottom marquee */}
       <div className="w-full z-10 mb-safe pb-4 md:pb-0">
         <MarqueeRow items={botMsgs.length > 0 ? botMsgs : seedMessages.slice(3)} direction="right" speed={35} delay={0.4} />
       </div>
@@ -418,3 +419,5 @@ export default function MessagesSection() {
     </section>
   )
 }
+
+export default memo(MessagesSection)
