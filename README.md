@@ -1,16 +1,58 @@
-# React + Vite
+# Last Class App 🎓
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![Tech Stack](https://img.shields.io/badge/Tech-React_%7C_Vite_%7C_Node.js-blue?style=for-the-badge)](#tech-stack)
 
-Currently, two official plugins are available:
+**Last Class App** is a full-stack web application. The frontend is powered by React and Vite for blazing-fast performance and hot-module replacement, while the `backend` directory handles the API, data processing, and server-side logic.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Features
 
-## React Compiler
+* **Modern Frontend:** Built with React and bundled with Vite for a fast, optimized user experience.
+* **Integrated Backend:** Contains a dedicated `/backend` directory to serve API requests and manage application logic.
+* **Component-Driven UI:** Clean, modular, and maintainable React architecture.
+* **Continuous Integration:** Pre-configured with GitHub Actions (in `.github/workflows`) for automated workflows.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠 Tech Stack
 
-## Expanding the ESLint configuration
+* **Frontend:** [React](https://react.dev/), [Vite](https://vitejs.dev/)
+* **Backend:** JavaScript / Node.js (inside `/backend`)
+* **Linting/Formatting:** ESLint
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🚀 Getting Started
+
+To run this project locally, you will need [Node.js](https://nodejs.org/) installed on your machine.
+
+### 1. Clone the repository
+```bash
+git clone [https://github.com/revanzaRaihan/last-class-app.git](https://github.com/revanzaRaihan/last-class-app.git)
+cd last-class-app
+
+2. Setup the Frontend
+The root of the repository contains the React + Vite application.
+
+# Install frontend dependencies
+npm install
+
+# Start the Vite development server
+npm run dev
+
+📂 Project Structure
+last-class-app/
+├── .github/workflows/   # CI/CD and automation pipelines
+├── backend/             # Server-side code, APIs, and database logic
+├── public/              # Static assets (favicon, etc.)
+├── src/                 # React frontend source code (components, pages, assets)
+├── eslint.config.js     # ESLint configuration
+├── index.html           # Main HTML entry point for Vite
+├── package.json         # Frontend dependencies and scripts
+└── vite.config.js       # Vite configuration
+
+📝 Available Scripts (Frontend)
+In the root directory, you can run:
+
+- npm run dev - Starts the development server.
+- npm run build - Builds the app for production to the dist folder.
+- npm run lint - Runs ESLint to catch code issues.
+- npm run preview - Locally previews the production build.
+
+📄 License
+This project is open-source and available under the MIT License.
